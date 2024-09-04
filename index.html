@@ -4,26 +4,64 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AR Building CD Experience - Debug</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.3.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <script>
-        AFRAME.registerComponent('log-errors', {
-            init: function () {
-                console.log('Scene initialized');
-                this.el.addEventListener('model-error', function(error) {
-                    console.error('Model failed to load', error);
-                    document.querySelector('#error-message').textContent = 'Error loading model: ' + error.detail.src;
-                });
-            }
+        function loadScript(url, callback) {
+            var script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = url;
+            script.onload = callback;
+            script.onerror = function() {
+                console.error('Failed to load script:', url);
+            };
+            document.head.appendChild(script);
+        }
+
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/aframe/1.3.0/aframe.min.js', function() {
+            console.log('A-Frame loaded successfully');
+            loadScript('https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js', function() {
+                console.log('AR.js loaded successfully');
+                initializeAR();
+            });
         });
+
+        function initializeAR() {
+            if (typeof AFRAME === 'undefined') {
+                console.error('A-Frame not loaded');
+                return;
+            }
+
+            AFRAME.registerComponent('log-errors', {
+                init: function () {
+                    console.log('Scene initialized');
+                    this.el.addEventListener('model-error', function(error) {
+                        console.error('Model failed to load', error);
+                        document.querySelector('#error-message').textContent = 'Error loading model: ' + error.detail.src;
+                    });
+                }
+            });
+
+            // Create and append the A-Frame scene
+            var sceneEl = document.createElement('a-scene');
+            sceneEl.setAttribute('embedded', '');
+            sceneEl.setAttribute('arjs', 'sourceType: webcam; debugUIEnabled: true;');
+            sceneEl.setAttribute('log-errors', '');
+
+            var boxEl = document.createElement('a-box');
+            boxEl.setAttribute('position', '0 0.5 0');
+            boxEl.setAttribute('material', 'opacity: 0.5;');
+
+            var markerCameraEl = document.createElement('a-marker-camera');
+            markerCameraEl.setAttribute('preset', 'hiro');
+
+            sceneEl.appendChild(boxEl);
+            sceneEl.appendChild(markerCameraEl);
+
+            document.body.appendChild(sceneEl);
+        }
     </script>
 </head>
 <body style="margin: 0; overflow: hidden;">
     <div id="error-message" style="position: fixed; top: 10px; left: 10px; color: red; z-index: 9999;"></div>
-    <a-scene embedded arjs='sourceType: webcam; debugUIEnabled: true;' log-errors>
-        <a-box position='0 0.5 0' material='opacity: 0.5;'></a-box>
-        <a-marker-camera preset='hiro'></a-marker-camera>
-    </a-scene>
     <div style="position: fixed; bottom: 10px; left: 10px; width: 100%; text-align: center; z-index: 1; color: white; background-color: rgba(0,0,0,0.5); padding: 5px;">
         AR Building CD Experience - Scan a Hiro marker to view the model
     </div>
